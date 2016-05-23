@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,42 +18,100 @@ namespace PanicButtonAzureIoT
     {
         static RegistryManager registryManager;
         static string connectionString = "HostName=lishansecurity.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=PuzeLHuLPxH7f48bJppTnVmK7KDLdpp4mIoe/X4+DYg=";
+        //static string connectionString = "HostName=lishansecurity.azure-devices.net;SharedAccessKeyName=device;SharedAccessKey=Tx24sV25ov0amJss17fSZiHLHuh+I1dFfTEboAHhmfQ=";
         //"HostName=lishansecurity.azure-devices.net;DeviceId=panicbutton-1;SharedAccessKey=vAJNz3OKUjAioTrTsXxJWxDwjxzoVnrFNf8qNO2D9/k="
 
         static DeviceClient deviceClient;
-        static string iotHubUri = "{iot hub hostname}";
-        static string deviceKey = "{device key}";
-        static string iotHubD2cEndpoint = "messages/events";
-        static EventHubClient eventHubClient;
+        static string iotHubUri = "lishansecurity.azure-devices.net";
+        static string deviceKey = "W2rTkHcLmSKqcK79WtGlrvpS4HykaIAW+yxOGb1qpMA=";
 
         static string devPos = "";
+        static string subKey = "SOFTWARE\\TVWS";
+        static string KeyName = "PanicButtonID";
+        static string deviceId = "";
+
+        public static string ReadDeviceIDFromKey()
+        {
+            // Opening the registry key
+            RegistryKey rk = Registry.CurrentUser;
+            // Open a subKey as read-only
+            RegistryKey sk1 = rk.OpenSubKey(subKey);
+            // If the RegistrySubKey doesn't exist -> (null)
+            if (sk1 == null)
+            {
+                return null;
+            }
+            else
+            {
+                try
+                {
+                    // If the RegistryKey exists I get its value
+                    // or null is returned.
+                    return (string)sk1.GetValue(KeyName);
+                }
+                catch (Exception e)
+                {
+                    // AAAAAAAAAAARGH, an error!
+                    // ShowErrorMessage(e, "Reading registry " + KeyName.ToUpper());
+                    return null;
+                }
+            }
+        }
+        public static bool WriteDeviceIDToKey(object Value)
+        {
+            try
+            {
+                // Setting
+                RegistryKey rk = Registry.CurrentUser;
+                // I have to use CreateSubKey 
+                // (create or open it if already exits), 
+                // 'cause OpenSubKey open a subKey as read-only
+                RegistryKey sk1 = rk.CreateSubKey(subKey);
+                // Save the value
+                sk1.SetValue(KeyName, Value);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                // AAAAAAAAAAARGH, an error!
+                // ShowErrorMessage(e, "Writing registry " + KeyName.ToUpper());
+                return false;
+            }
+        }
 
         private static async Task AddDeviceAsync()
         {
             int numId = 0;
-            string deviceId = "myPanicButton" + numId.ToString();
+ 
             Device device;
-            bool success = false;
 
-            while (!success)
+            deviceId = ReadDeviceIDFromKey();
+            if (deviceId != null)
             {
+                device = await registryManager.GetDeviceAsync(deviceId);
+            }
+            else
+            {
+            
                 try
                 {
-                    device = await registryManager.AddDeviceAsync(new Device(deviceId));
-                }
-                catch (DeviceAlreadyExistsException)
-                {
-                    //device = await registryManager.GetDeviceAsync(deviceId);
-                    numId++;
-                    deviceId = "myPanicButton" + numId.ToString();
+                    var devices = await registryManager.GetDevicesAsync(10);
+                    numId = devices.Count<Device>() + 1;
 
-                    if (numId > 10) success = true;
-                    else continue;
+                } catch(DeviceNotFoundException)
+                {
+                    numId = 0;
                 }
-                success = true;
-                
+
+                deviceId = "myPanicButton" + numId.ToString();
+                WriteDeviceIDToKey((object)deviceId);
+
+                device = await registryManager.AddDeviceAsync(new Device(deviceId));
             }
-            Console.WriteLine("Generated device key: {0}", device.Authentication.SymmetricKey.PrimaryKey);
+
+            deviceKey = device.Authentication.SymmetricKey.PrimaryKey;
+            //Console.WriteLine("Generated device key: {0}", device.Authentication.SymmetricKey.PrimaryKey);
         }
 
         private static async void SendDeviceToCloudMessagesAsync()
@@ -66,11 +125,10 @@ namespace PanicButtonAzureIoT
 
                 var telemetryDataPoint = new
                 {
-                    deviceId = "myFirstDevice",
                     windSpeed = currentWindSpeed
                 };
                 var messageString = JsonConvert.SerializeObject(telemetryDataPoint);
-                var message = new Message(Encoding.ASCII.GetBytes(messageString));
+                var message = new Microsoft.Azure.Devices.Client.Message(Encoding.ASCII.GetBytes(messageString));
 
                 await deviceClient.SendEventAsync(message);
                 Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
@@ -79,17 +137,19 @@ namespace PanicButtonAzureIoT
             }
         }
 
-        private static async Task ReceiveMessagesFromDeviceAsync(string partition, CancellationToken ct)
+        private static async void ReceiveC2dAsync()
         {
-            var eventHubReceiver = eventHubClient.GetDefaultConsumerGroup().CreateReceiver(partition, DateTime.UtcNow);
+            Console.WriteLine("\nReceiving cloud to device messages from service");
             while (true)
             {
-                if (ct.IsCancellationRequested) break;
-                EventData eventData = await eventHubReceiver.ReceiveAsync();
-                if (eventData == null) continue;
+                Microsoft.Azure.Devices.Client.Message receivedMessage = await deviceClient.ReceiveAsync();
+                if (receivedMessage == null) continue;
 
-                string data = Encoding.UTF8.GetString(eventData.GetBytes());
-                Console.WriteLine("Message received. Partition: {0} Data: '{1}'", partition, data);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Received message: {0}", Encoding.ASCII.GetString(receivedMessage.GetBytes()));
+                Console.ResetColor();
+
+                await deviceClient.CompleteAsync(receivedMessage);
             }
         }
 
@@ -109,6 +169,14 @@ namespace PanicButtonAzureIoT
 
             registryManager = RegistryManager.CreateFromConnectionString(connectionString);
             AddDeviceAsync().Wait();
+
+            deviceClient = DeviceClient.Create(iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey));
+
+            ReceiveC2dAsync();
+            SendDeviceToCloudMessagesAsync();
+
+            Console.ReadLine();
+
         }
     }
 }
