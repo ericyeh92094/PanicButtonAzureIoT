@@ -11,6 +11,8 @@ using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
+using RestSharp;
+
 
 namespace PanicButtonAzureIoT
 {
@@ -133,7 +135,7 @@ namespace PanicButtonAzureIoT
                 await deviceClient.SendEventAsync(message);
                 Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
 
-                Task.Delay(1000).Wait();
+                Task.Delay(10000).Wait();
             }
         }
 
@@ -150,6 +152,39 @@ namespace PanicButtonAzureIoT
                 Console.ResetColor();
 
                 await deviceClient.CompleteAsync(receivedMessage);
+            }
+        }
+
+        private static void PingOut()
+        {
+            var client = new RestClient("http://testnode1231231.azurewebsites.net/error/3");
+            var request = new RestRequest(Method.PUT);
+            request.AddHeader("postman-token", "e578ec62-2e4c-2046-a412-9a343ddab59d");
+            request.AddHeader("cache-control", "no-cache");
+            IRestResponse response = client.Execute(request);
+        }
+
+        private static void GetConsoleKey()
+        {
+            while (true)
+            {
+                if (Console.KeyAvailable)
+                {
+                    ConsoleKeyInfo key = Console.ReadKey(true);
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.F4:
+                            Console.WriteLine("Alarm Fired");
+                            PingOut();
+                            break;
+                        case ConsoleKey.F1:
+                        case ConsoleKey.Escape:
+                            Console.WriteLine("Program Exit");
+                            return;
+                        default:
+                            break;
+                    }
+                }
             }
         }
 
@@ -175,7 +210,7 @@ namespace PanicButtonAzureIoT
             ReceiveC2dAsync();
             SendDeviceToCloudMessagesAsync();
 
-            Console.ReadLine();
+            GetConsoleKey();
 
         }
     }
