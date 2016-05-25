@@ -20,9 +20,7 @@ namespace PanicButtonAzureIoT
     {
         static RegistryManager registryManager;
         static string connectionString = "HostName=lishansecurity.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=PuzeLHuLPxH7f48bJppTnVmK7KDLdpp4mIoe/X4+DYg=";
-        //static string connectionString = "HostName=lishansecurity.azure-devices.net;SharedAccessKeyName=device;SharedAccessKey=Tx24sV25ov0amJss17fSZiHLHuh+I1dFfTEboAHhmfQ=";
-        //"HostName=lishansecurity.azure-devices.net;DeviceId=panicbutton-1;SharedAccessKey=vAJNz3OKUjAioTrTsXxJWxDwjxzoVnrFNf8qNO2D9/k="
-
+ 
         static DeviceClient deviceClient;
         static string iotHubUri = "lishansecurity.azure-devices.net";
         static string deviceKey = "W2rTkHcLmSKqcK79WtGlrvpS4HykaIAW+yxOGb1qpMA=";
@@ -168,22 +166,58 @@ namespace PanicButtonAzureIoT
         {
             while (true)
             {
-                if (Console.KeyAvailable)
+                bool F4pressed = false;
+                ConsoleKeyInfo key;
+
+                // wait for initial keypress:
+                while (!Console.KeyAvailable)
                 {
-                    ConsoleKeyInfo key = Console.ReadKey(true);
-                    switch (key.Key)
+                    System.Threading.Thread.Sleep(10);
+                }
+
+                key = Console.ReadKey(true);
+
+                switch (key.Key)
+                {
+                    case ConsoleKey.F4:
+                        F4pressed = true;
+                        Console.WriteLine("F4 pressed. Wait for long press 5 sec.");
+                        break;
+                    case ConsoleKey.F1:
+                    case ConsoleKey.Escape:
+                        Console.WriteLine("Program Exit");
+                        return;
+                    default:
+                        F4pressed = false;
+                        break;
+                }
+
+                DateTime nextCheck = DateTime.Now.AddMilliseconds(5000);
+                while (nextCheck > DateTime.Now)
+                {
+                    if (Console.KeyAvailable)
                     {
-                        case ConsoleKey.F4:
-                            Console.WriteLine("Alarm Fired");
-                            PingOut();
-                            break;
-                        case ConsoleKey.F1:
-                        case ConsoleKey.Escape:
-                            Console.WriteLine("Program Exit");
-                            return;
-                        default:
-                            break;
+                        key = Console.ReadKey(true);
+                        switch (key.Key)
+                        {
+                            case ConsoleKey.F4:
+                                F4pressed = true;
+                               break;
+                            case ConsoleKey.F1:
+                            case ConsoleKey.Escape:
+                                Console.WriteLine("Program Exit");
+                                return;
+                            default:
+                                F4pressed = false;
+                                break;
+                        }
                     }
+                }
+             
+                if (F4pressed)
+                {
+                    Console.WriteLine("Alarm Fired");
+                    PingOut();
                 }
             }
         }
