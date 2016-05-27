@@ -12,6 +12,7 @@ using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using RestSharp;
+using System.Runtime.InteropServices;
 
 
 namespace PanicButtonAzureIoT
@@ -29,6 +30,22 @@ namespace PanicButtonAzureIoT
         static string subKey = "SOFTWARE\\TVWS";
         static string KeyName = "PanicButtonID";
         static string deviceId = "";
+
+        static string monitorUrl = "http://testnode1231231.azurewebsites.net/error/";
+        static string monitorId = "";
+
+        [DllImport("HIDCtrl.dll")]
+        internal static extern int PowerOnEx(int i);
+        [DllImport("HIDCtrl.dll")]
+        internal static extern int PowerOffEx(int i);
+
+        public static void BuzzControl(bool on)
+        {
+            if (on)
+                PowerOnEx(1);
+            else
+                PowerOffEx(1);
+        }
 
         public static string ReadDeviceIDFromKey()
         {
@@ -114,6 +131,7 @@ namespace PanicButtonAzureIoT
             //Console.WriteLine("Generated device key: {0}", device.Authentication.SymmetricKey.PrimaryKey);
         }
 
+        /*
         private static async void SendDeviceToCloudMessagesAsync()
         {
             double avgWindSpeed = 10; // m/s
@@ -129,12 +147,27 @@ namespace PanicButtonAzureIoT
                 };
                 var messageString = JsonConvert.SerializeObject(telemetryDataPoint);
                 var message = new Microsoft.Azure.Devices.Client.Message(Encoding.ASCII.GetBytes(messageString));
+                //message.Properties["messageType"] = "interactive";
+                //message.MessageId = Guid.NewGuid().ToString();
 
                 await deviceClient.SendEventAsync(message);
                 Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
 
                 Task.Delay(10000).Wait();
             }
+        }
+        */
+
+        private static async void SendDeviceToCloudMessagesAsync(string messageString)
+        {
+            var message = new Microsoft.Azure.Devices.Client.Message(Encoding.ASCII.GetBytes(messageString));
+            //message.Properties["messageType"] = "interactive";
+            //message.MessageId = Guid.NewGuid().ToString();
+
+            await deviceClient.SendEventAsync(message);
+            Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
+
+            Task.Delay(10000).Wait();
         }
 
         private static async void ReceiveC2dAsync()
@@ -145,11 +178,44 @@ namespace PanicButtonAzureIoT
                 Microsoft.Azure.Devices.Client.Message receivedMessage = await deviceClient.ReceiveAsync();
                 if (receivedMessage == null) continue;
 
+                string opStr = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Received message: {0}", Encoding.ASCII.GetString(receivedMessage.GetBytes()));
+                Console.WriteLine("Received message: {0}", opStr);
                 Console.ResetColor();
 
                 await deviceClient.CompleteAsync(receivedMessage);
+
+                if (opStr.StartsWith("GPS"))
+                {
+                    SendDeviceToCloudMessagesAsync(devPos);
+                }
+                if (opStr.StartsWith("SET ID"))
+                {
+                    int idx = opStr.IndexOf("=");
+                    monitorId = opStr.Substring(idx + 1);
+
+                    SendDeviceToCloudMessagesAsync("OK");
+                }
+                if (opStr.StartsWith("SET URL"))
+                {
+                    int idx = opStr.IndexOf("=");
+                    monitorUrl = opStr.Substring(idx + 1);
+
+                    SendDeviceToCloudMessagesAsync("OK");
+                }
+                if (opStr.StartsWith("BUZZ ON"))
+                {
+                    BuzzControl(true);
+
+                    SendDeviceToCloudMessagesAsync("OK");
+                }
+                if (opStr.StartsWith("BUZZ OFF"))
+                {
+                    BuzzControl(false);
+
+                    SendDeviceToCloudMessagesAsync("OK");
+                }
             }
         }
 
@@ -167,6 +233,7 @@ namespace PanicButtonAzureIoT
             while (true)
             {
                 bool F4pressed = false;
+                int presscount = 0;
                 ConsoleKeyInfo key;
 
                 // wait for initial keypress:
@@ -181,19 +248,22 @@ namespace PanicButtonAzureIoT
                 {
                     case ConsoleKey.F4:
                         F4pressed = true;
-                        Console.WriteLine("F4 pressed. Wait for long press 5 sec.");
+                        Console.WriteLine("F4 pressed start.");
                         break;
                     case ConsoleKey.F1:
                     case ConsoleKey.Escape:
                         Console.WriteLine("Program Exit");
+                        BuzzControl(false);
                         return;
                     default:
                         F4pressed = false;
-                        break;
+                        continue;
                 }
 
-                DateTime nextCheck = DateTime.Now.AddMilliseconds(5000);
-                while (nextCheck > DateTime.Now)
+
+                DateTime nextCheck = DateTime.Now.AddMilliseconds(3000);
+
+                while ((nextCheck > DateTime.Now) && F4pressed)
                 {
                     if (Console.KeyAvailable)
                     {
@@ -201,11 +271,14 @@ namespace PanicButtonAzureIoT
                         switch (key.Key)
                         {
                             case ConsoleKey.F4:
+                                Console.WriteLine("F4 pressed.");
+                                presscount++;
                                 F4pressed = true;
-                               break;
+                                break;
                             case ConsoleKey.F1:
                             case ConsoleKey.Escape:
                                 Console.WriteLine("Program Exit");
+                                BuzzControl(false);
                                 return;
                             default:
                                 F4pressed = false;
@@ -214,10 +287,11 @@ namespace PanicButtonAzureIoT
                     }
                 }
              
-                if (F4pressed)
+                if (F4pressed && (presscount > 3))
                 {
                     Console.WriteLine("Alarm Fired");
                     PingOut();
+                    BuzzControl(true);
                 }
             }
         }
@@ -242,7 +316,6 @@ namespace PanicButtonAzureIoT
             deviceClient = DeviceClient.Create(iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey));
 
             ReceiveC2dAsync();
-            SendDeviceToCloudMessagesAsync();
 
             GetConsoleKey();
 
