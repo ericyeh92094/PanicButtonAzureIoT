@@ -166,13 +166,13 @@
         "Entry"
         {
         "MsmKey" = "8:_47D8E4A9621E46A66B54297927135767"
-        "OwnerKey" = "8:_09E369AA1461B989BB03A104D2981CBC"
+        "OwnerKey" = "8:_0E7D741DF51E48339FC5DB4F2EB451D8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_47D8E4A9621E46A66B54297927135767"
-        "OwnerKey" = "8:_0E7D741DF51E48339FC5DB4F2EB451D8"
+        "OwnerKey" = "8:_09E369AA1461B989BB03A104D2981CBC"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -298,13 +298,13 @@
         "Entry"
         {
         "MsmKey" = "8:_782F0389459A875CB1018387E1FE1EC5"
-        "OwnerKey" = "8:_47D8E4A9621E46A66B54297927135767"
+        "OwnerKey" = "8:_0E7D741DF51E48339FC5DB4F2EB451D8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_782F0389459A875CB1018387E1FE1EC5"
-        "OwnerKey" = "8:_0E7D741DF51E48339FC5DB4F2EB451D8"
+        "OwnerKey" = "8:_47D8E4A9621E46A66B54297927135767"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -412,13 +412,31 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5BE11DEDD2F8A146E032C2F99E4979EE"
+        "OwnerKey" = "8:_4ADFE7FCD778CE5A131DF26EFE9A28E3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_5A939C4E6C3D9C8BCF2DC1727B03BBF7"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_47D8E4A9621E46A66B54297927135767"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_0E7D741DF51E48339FC5DB4F2EB451D8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_782F0389459A875CB1018387E1FE1EC5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -437,30 +455,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_09E369AA1461B989BB03A104D2981CBC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_47D8E4A9621E46A66B54297927135767"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5A939C4E6C3D9C8BCF2DC1727B03BBF7"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4ADFE7FCD778CE5A131DF26EFE9A28E3"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_782F0389459A875CB1018387E1FE1EC5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -559,6 +553,12 @@
         "OwnerKey" = "8:_032641CF1F87AE8AFC447EB8E87F2D31"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_5BE11DEDD2F8A146E032C2F99E4979EE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -584,6 +584,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.5"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.5 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.5"
+                    }
+                }
             }
         }
         "Release"
@@ -608,6 +616,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.5"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.5 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.5"
+                    }
+                }
             }
         }
     }
@@ -1130,7 +1146,7 @@
             "SharedLegacy" = "11:FALSE"
             "PackageAs" = "3:1"
             "Register" = "3:1"
-            "Exclude" = "11:FALSE"
+            "Exclude" = "11:TRUE"
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
@@ -1470,7 +1486,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:PanicButtonSetup"
         "ProductCode" = "8:{93009FBD-AC0A-4BC0-B18E-6E11A1D73314}"
-        "PackageCode" = "8:{5EAA8C88-55E4-452C-A1C7-F1A2BD20E6A1}"
+        "PackageCode" = "8:{FBDE901F-8EAE-4AF2-B961-0D414D39FB4F}"
         "UpgradeCode" = "8:{A5B47008-E9B8-41F9-92FC-D5887D82011D}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -1478,12 +1494,12 @@
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
         "ProductVersion" = "8:1.0.0"
-        "Manufacturer" = "8:Default Company Name"
+        "Manufacturer" = "8:TVWSPilot"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
         "Title" = "8:PanicButtonSetup"
         "Subject" = "8:"
-        "ARPCONTACT" = "8:Default Company Name"
+        "ARPCONTACT" = "8:TVWSPilot"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:"
         "ARPURLINFOABOUT" = "8:"

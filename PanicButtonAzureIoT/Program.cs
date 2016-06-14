@@ -31,8 +31,8 @@ namespace PanicButtonAzureIoT
         static string KeyName = "PanicButtonID";
         static string deviceId = "";
 
-        static string monitorUrl = "http://testnode1231231.azurewebsites.net/error/";
-        static string monitorId = "";
+        static string monitorUrl = "http://192.168.1.21:0808"; //"http://testnode1231231.azurewebsites.net/error/";
+        static string monitorId = "1";
 
         [DllImport("HIDCtrl.dll")]
         internal static extern int PowerOnEx(int i);
@@ -109,8 +109,7 @@ namespace PanicButtonAzureIoT
                 device = await registryManager.GetDeviceAsync(deviceId);
             }
             else
-            {
-            
+            {           
                 try
                 {
                     var devices = await registryManager.GetDevicesAsync(10);
@@ -221,10 +220,11 @@ namespace PanicButtonAzureIoT
 
         private static void PingOut()
         {
-            var client = new RestClient("http://testnode1231231.azurewebsites.net/error/3");
-            var request = new RestRequest(Method.PUT);
-            request.AddHeader("postman-token", "e578ec62-2e4c-2046-a412-9a343ddab59d");
-            request.AddHeader("cache-control", "no-cache");
+            var client = new RestClient(monitorUrl);
+            var request = new RestRequest(Method.POST);
+            //request.AddHeader("postman-token", "e578ec62-2e4c-2046-a412-9a343ddab59d");
+            //request.AddHeader("cache-control", "no-cache");
+            request.AddParameter("error", monitorId.ToString());
             IRestResponse response = client.Execute(request);
         }
 
@@ -260,8 +260,9 @@ namespace PanicButtonAzureIoT
                         continue;
                 }
 
+                /*
 
-                DateTime nextCheck = DateTime.Now.AddMilliseconds(3000);
+                DateTime nextCheck = DateTime.Now.AddMilliseconds(1000);
 
                 while ((nextCheck > DateTime.Now) && F4pressed)
                 {
@@ -286,12 +287,15 @@ namespace PanicButtonAzureIoT
                         }
                     }
                 }
-             
-                if (F4pressed && (presscount > 3))
+                */
+                //if (F4pressed && (presscount > 3))
+                if (F4pressed)
                 {
                     Console.WriteLine("Alarm Fired");
                     PingOut();
                     BuzzControl(true);
+                    System.Threading.Thread.Sleep(5);
+                    BuzzControl(false);
                 }
             }
         }
